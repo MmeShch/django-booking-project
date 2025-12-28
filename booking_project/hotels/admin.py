@@ -1,8 +1,4 @@
 from django.contrib import admin
-
-<<<<<<< HEAD
-# Register your models here.
-=======
 from hotels.models import Hotel, Room
 
 @admin.register(Hotel)
@@ -22,4 +18,4 @@ class RoomAdmin(admin.ModelAdmin):
     search_fields = ['hotel__name']
 
 
->>>>>>> feat/hotels-app
+
