@@ -1,66 +1,64 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect
-from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django.views.generic import ListView, DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import Hotel, Room
+from .serializers import HotelSerializer, RoomSerializer
+
 
 class HotelListView(ListView):
     model = Hotel
+    template_name = 'hotels/hotel_list.html'
+    context_object_name = 'hotels'
     paginate_by = 5
 
     def get_queryset(self):
-        return Hotel.objects.filter(deleted=False).order_by('-created_at')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['user_authenticated'] = self.request.user.is_authenticated
-        return context
+        return Hotel.objects.filter(deleted=False).select_related('rooms')
 
 
 class HotelDetailView(DetailView):
     model = Hotel
+    template_name = 'hotels/hotel_detail.html'
+    context_object_name = 'hotel'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
 
     def get_queryset(self):
-        return Hotel.objects.filter(deleted=False)
+        return Hotel.objects.filter(deleted=False).prefetch_related('rooms__photos', 'photos', 'reviews')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user_authenticated'] = self.request.user.is_authenticated
         context['rooms'] = self.object.rooms.filter(deleted=False)
         return context
 
 
 class RoomDetailView(DetailView):
     model = Room
+    template_name = 'hotels/room_detail.html'
+    context_object_name = 'room'
 
     def get_queryset(self):
-        return Room.objects.filter(deleted=False)
+        return Room.objects.filter(deleted=False).select_related('hotel')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['user_authenticated'] = self.request.user.is_authenticated
-        context['room_free'] = self.object.available
+
+#------------------API---------------------------------------
+class HotelViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Hotel.objects.filter(deleted=False).select_related('rooms')
+    serializer_class = HotelSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+
+class RoomViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Room.objects.filter(deleted=False).select_related('hotel')
+    serializer_class = RoomSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['hotel_id'] = self.kwargs.get('hotel_pk')
         return context
 
-
-class AdminHotelListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    model = Hotel
-
-    def test_func(self):
-        return self.request.user.is_staff
-
-
-class AdminHotelCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
-    model = Hotel
-    fields = ['name', 'location', 'description', 'photos', 'rating']
-
-    def test_func(self):
-        return self.request.user.is_staff
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Hotel is created!')
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return 'hotels:admin_hotel_list'
