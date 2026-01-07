@@ -1,10 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}{{ hotel.name }} - Booking{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+
+    <div class="col-lg-8">
+        {% if hotel.main_photo %}
+            <img src="{{ hotel.main_photo.url }}" class="img-fluid rounded mb-4 shadow"
+                 alt="{{ hotel.name }}">
+        {% endif %}
+
+
+        {% if hotel.photos.exists %}
+        <div class="row g-3 mb-4">
+            {% for photo in hotel.photos.all|slice:":6" %}
+            <div class="col-md-4 col-lg-2">
+                <div class="overflow-hidden rounded shadow-sm" style="height: 120px;">
+                    <img src="{{ photo.image.url }}" class="w-100 h-100 object-fit-cover" alt="Hotel photo">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+
+        {% if hotel.description %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Description</h5>
+                <p class="card-text">{{ hotel.description }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm sticky-top" style="top: 20px;">
+            <div class="card-body text-center p-4">
+                <div class="display-4 text-warning mb-2">⭐</div>
+                <h2 class="mb-1">{{ hotel.rating|floatformat:1 }}/5</h2>
+                <p class="text-muted mb-3">({{ hotel.reviews.count }} reviews)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Available Rooms</h2>
+        <div class="row g-4">
+            {% for room in rooms %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    {% if room.main_photo %}
+                        <img src="{{ room.main_photo.url }}" class="card-img-top"
+                             alt="{{ room }}" style="height: 180px; object-fit: cover;">
+                    {% endif %}
+
+                    <div class="card-body">
+                        <h5>{{ room.get_room_type_display }} #{{ room.id }}</h5>
+                        {% if room.is_available %}
+                            <span class="badge bg-success">Available</span>
+                        {% else %}
+                            <span class="badge bg-danger">Booked</span>
+                        {% endif %}
+                        <h4 class="text-primary mt-2">${{ room.price_per_night }}/night</h4>
+                        {% if room.is_available %}
+                            <a href="{% url 'room_detail' room.pk %}" class="btn btn-success w-100 mt-2">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <h4>No rooms available</h4>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
