@@ -5,6 +5,31 @@
 {% endblock title %}
 
 
-{% block body %}
-<h1>Welcome to my Booking Site</h1>
-{% endblock body %}
+{% block content %}
+<div class="jumbotron bg-primary text-white p-5 rounded mb-5">
+    <div class="container">
+        <h1 class="display-4 mb-4">🏨 Welcome!</h1>
+        <p class="lead mb-4">Book hotels with comfort</p>
+        <a href="{% url 'hotels:hotel_list' %}" class="btn btn-light btn-lg px-4">
+            Find a hotel
+        </a>
+    </div>
+</div>
+
+<div class="row text-center mb-5">
+    <div class="col-md-4">
+        <div class="display-4 text-primary mb-3">🏨</div>
+        <h4>Hotels</h4>
+        <p>All hotels in one place</p>
+    </div>
+    <div class="col-md-4">
+        <div class="display-4 text-success mb-3">✅</div>
+        <h4>Booking</h4>
+    </div>
+    <div class="col-md-4">
+        <div class="display-4 text-warning mb-3">⭐</div>
+        <h4>Comments</h4>
+        <p>Rating</p>
+    </div>
+</div>
+{% endblock %}
