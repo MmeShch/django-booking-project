@@ -1,13 +1,9 @@
-from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from .models import Hotel, Room
 from .serializers import HotelSerializer, RoomSerializer
+from .forms import ReviewForm
 
 
 class HotelListView(ListView):
@@ -33,6 +29,8 @@ class HotelDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['rooms'] = self.object.rooms.filter(deleted=False)
+        if self.request.user.is_authenticated:
+            context['review_form'] = ReviewForm(initial={'hotel': self.object})
         return context
 
 
