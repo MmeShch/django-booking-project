@@ -13,7 +13,7 @@ class HotelListView(ListView):
     paginate_by = 5
 
     def get_queryset(self):
-        return Hotel.objects.filter(deleted=False).select_related('rooms')
+        return Hotel.objects.prefetch_related('rooms').filter(deleted=False)
 
 
 class HotelDetailView(DetailView):

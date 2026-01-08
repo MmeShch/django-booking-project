@@ -1,86 +1,82 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ hotel.name }} - Booking{% endblock %}
+{% block title %}{{ hotel.name }}{% endblock %}
 
 {% block content %}
-<div class="row mb-5">
-
+<div class="row g-4 mb-5">
     <div class="col-lg-8">
         {% if hotel.main_photo %}
-            <img src="{{ hotel.main_photo.url }}" class="img-fluid rounded mb-4 shadow"
-                 alt="{{ hotel.name }}">
+            <img src="{{ hotel.main_photo.url }}" class="img-fluid w-100 rounded shadow-lg mb-4" style="height: 400px; object-fit: cover;">
         {% endif %}
-
-
-        {% if hotel.photos.exists %}
-        <div class="row g-3 mb-4">
-            {% for photo in hotel.photos.all|slice:":6" %}
-            <div class="col-md-4 col-lg-2">
-                <div class="overflow-hidden rounded shadow-sm" style="height: 120px;">
-                    <img src="{{ photo.image.url }}" class="w-100 h-100 object-fit-cover" alt="Hotel photo">
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
 
         {% if hotel.description %}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Description</h5>
-                <p class="card-text">{{ hotel.description }}</p>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h4 class="fw-bold mb-3">Description</h4>
+                <p class="text-muted">{{ hotel.description }}</p>
             </div>
         </div>
         {% endif %}
     </div>
 
-
     <div class="col-lg-4">
-        <div class="card shadow-sm sticky-top" style="top: 20px;">
+        <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
             <div class="card-body text-center p-4">
-                <div class="display-4 text-warning mb-2">⭐</div>
-                <h2 class="mb-1">{{ hotel.rating|floatformat:1 }}/5</h2>
-                <p class="text-muted mb-3">({{ hotel.reviews.count }} reviews)</p>
+                <h2 class="text-warning mb-2">{{ hotel.rating|floatformat:1 }}</h2>
+                <div class="text-warning mb-3">★★★★☆</div>
+                <p class="text-muted mb-0">{{ hotel.reviews.count }} reviews</p>
             </div>
         </div>
     </div>
 </div>
 
+<h2 class="h3 fw-bold mb-4">Rooms ({{ rooms.count }})</h2>
+<div class="row g-4">
+    {% for room in rooms %}
+    <div class="col-xl-4 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            {% if room.main_photo %}
+                <img src="{{ room.main_photo.url }}" class="card-img-top" style="height: 220px; object-fit: cover;">
+            {% endif %}
 
-<div class="row">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title fw-bold mb-0">{{ room.get_room_type_display }}</h5>
+                    <span class="badge {% if room.is_available %}bg-success{% else %}bg-secondary{% endif %}">
+                        {% if room.is_available %}Available{% else %}Booked{% endif %}
+                    </span>
+                </div>
+
+                <h3 class="text-primary fw-bold mb-3">${{ room.price_per_night|floatformat:0 }}</h3>
+                <p class="text-muted mb-4">per night</p>
+
+                {% if room.is_available %}
+                    <a href="{% url 'room_detail' room.pk %}" class="btn btn-success w-100">Book Now</a>
+                {% else %}
+                    <button class="btn btn-outline-secondary w-100" disabled>Unavailable</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
     <div class="col-12">
-        <h2 class="mb-4">Available Rooms</h2>
-        <div class="row g-4">
-            {% for room in rooms %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm">
-                    {% if room.main_photo %}
-                        <img src="{{ room.main_photo.url }}" class="card-img-top"
-                             alt="{{ room }}" style="height: 180px; object-fit: cover;">
-                    {% endif %}
-
-                    <div class="card-body">
-                        <h5>{{ room.get_room_type_display }} #{{ room.id }}</h5>
-                        {% if room.is_available %}
-                            <span class="badge bg-success">Available</span>
-                        {% else %}
-                            <span class="badge bg-danger">Booked</span>
-                        {% endif %}
-                        <h4 class="text-primary mt-2">${{ room.price_per_night }}/night</h4>
-                        {% if room.is_available %}
-                            <a href="{% url 'room_detail' room.pk %}" class="btn btn-success w-100 mt-2">Book Now</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <h4>No rooms available</h4>
-                </div>
-            {% endfor %}
+        <div class="text-center py-5">
+            <h4 class="text-muted">No rooms available</h4>
         </div>
     </div>
+    {% endfor %}
 </div>
+
+{% if review_form %}
+<div class="card shadow-sm border-0 mt-5">
+    <div class="card-body p-4">
+        <h4 class="fw-bold mb-4">Leave Review</h4>
+        <form method="post">
+            {% csrf_token %}
+            {{ review_form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit Review</button>
+        </form>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
